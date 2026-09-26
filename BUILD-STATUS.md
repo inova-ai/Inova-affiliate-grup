@@ -1,11 +1,8 @@
-# Inova Affiliate Grup — V11
+# Inova Affiliate Grup — V12
 
-## Changes
-- Kept the existing 3 workflows unchanged.
-- Hardened `/api/pose-edit` for GPT Image editing.
-- Added OpenAI Image Edit diagnostics to the API response without exposing the API key.
-- Captures OpenAI HTTP status, request ID, model, error type/code/param, source content type and source byte size.
-- 3 Pose UI now includes the OpenAI Request ID when an error is returned, making the next diagnosis definitive.
-
-## Deployment
-Use the same Netlify settings/environment variables from V10.
+- Preserved all existing workflows.
+- Preserved server-side API key usage.
+- Preserved V11 OpenAI Image Edit diagnostics.
+- Fixed Netlify deployment failure caused by secret scanning of Next.js production webpack cache.
+- Production webpack cache is disabled so secret values are not retained in `.next/cache/webpack` build artifacts.
+- Netlify build clears `.next` and `.netlify` before building to avoid stale cache artifacts.
