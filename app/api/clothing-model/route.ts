@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     const prompt = `Create a realistic full-body commercial fashion model wearing the exact clothing product shown in the reference image. ${gender === "pria" ? "Use an adult male model." : "Use an adult female model."} Keep the garment's exact design, color, pattern, logo, material, seams, buttons, zipper, proportions and details. Do not redesign, recolor, remove or add clothing. Place the model in a clean premium studio fashion setting. ${style}. Full body visible, natural anatomy, realistic hands, photorealistic product photography. The clothing is the hero of the image.`;
 
     const form = new FormData();
-    form.append("model", process.env.OPENAI_IMAGE_MODEL || "gpt-image-2");
+    form.append("model", process.env["OPENAI_IMAGE_MODEL"] || "gpt-image-2");
     form.append("image[]", sourceBlob, `clothing.${extension}`);
     form.append("prompt", prompt);
     form.append("n", "1");
