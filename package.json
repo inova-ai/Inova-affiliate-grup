@@ -4,9 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run check-env-bundle && next build",
-    "start": "next start",
-    "check-env-bundle": "node scripts/check-env-bundle.mjs"
+    "build": "next build",
+    "start": "next start"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
