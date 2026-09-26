@@ -26,3 +26,7 @@ The 3-pose workflow generates three separate pose edits server-side and then com
 
 ### OpenAI key
 Set `OPENAI_API_KEY` in the deployment environment. Do not include `Bearer`, quotes, or whitespace around the key. If the API returns HTTP 401, the app now shows a specific key/configuration message instead of the generic `Unknown API key`.
+
+
+## V18.7 Pose API Sync Fix
+The pose route is version-stamped (`x-inova-pose-route: 18.7`) and the UI preflights `/api/health` before generating. If the browser still reports the old `Unknown API key` text after deployment, the deployed Netlify function is stale and this ZIP must be redeployed.
