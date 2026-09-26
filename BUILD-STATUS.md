@@ -1,12 +1,11 @@
-# Inova Affiliate Grup — Build Status
+# Inova Affiliate Grup — V11
 
-## V7
+## Changes
+- Kept the existing 3 workflows unchanged.
+- Hardened `/api/pose-edit` for GPT Image editing.
+- Added OpenAI Image Edit diagnostics to the API response without exposing the API key.
+- Captures OpenAI HTTP status, request ID, model, error type/code/param, source content type and source byte size.
+- 3 Pose UI now includes the OpenAI Request ID when an error is returned, making the next diagnosis definitive.
 
-- Removed the legacy `@netlify/plugin-nextjs` pin so Netlify can use its current OpenNext adapter automatically.
-- Explicitly set the Next.js publish directory to `.next`.
-- Added `GET /api/health` for safe deployment/environment checks.
-- Health endpoint reports only whether required environment variables exist; it never returns secret values.
-- Existing workflows are preserved:
-  1. Foto + Video → Video
-  2. 1 Foto → 3 Pose
-  3. Clothing → Video
+## Deployment
+Use the same Netlify settings/environment variables from V10.
