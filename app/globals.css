@@ -191,3 +191,16 @@ button { -webkit-tap-highlight-color: transparent; }
 .section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:15px;margin-bottom:12px}.section-head h2{margin:4px 0 0;font-size:16px}.section-head p{margin:5px 0 0;color:rgba(255,255,255,.3);font-size:9px}.ghost-btn{border:1px solid rgba(255,255,255,.08);border-radius:9px;background:rgba(255,255,255,.025);color:rgba(255,255,255,.45);padding:7px 10px;font-size:8px;cursor:pointer}.history-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.history-card{min-width:0;padding:9px;border:1px solid rgba(255,255,255,.07);border-radius:11px;background:#090909}.history-thumb{position:relative;aspect-ratio:16/10;display:grid;place-items:center;overflow:hidden;border-radius:8px;background:#030303;color:rgba(255,255,255,.2);margin-bottom:8px}.history-thumb video{width:100%;height:100%;object-fit:cover}.history-thumb span{position:absolute;top:5px;right:5px;padding:3px 5px;border-radius:999px;background:rgba(0,0,0,.7);color:#7ed7a2;font-size:6px}.history-card>b{display:block;font-size:9px}.history-card>small{display:block;margin-top:3px;color:rgba(255,255,255,.3);font-size:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.history-empty{min-height:95px;display:flex;align-items:center;justify-content:center;gap:9px;border:1px dashed rgba(255,255,255,.08);border-radius:10px;color:rgba(255,255,255,.28);font-size:9px;text-align:center}
 @media(max-width:900px){.history-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:640px){.history-grid{grid-template-columns:1fr 1fr}.section-head{align-items:flex-start}.global-progress span{right:8px;font-size:7px}.toast-notice{left:12px;right:12px;bottom:78px}}
+
+
+/* 3 Pose → 1 Foto: three equal vertical panels, matching the reference layout. */
+.combined-pose-wrap{margin-top:12px;width:100%;}
+.combined-pose-image{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:16px;background:#000;}
+.combined-pose-placeholder{width:100%;}
+.combined-pose-panels{display:grid;grid-template-columns:repeat(3,1fr);width:100%;aspect-ratio:1/1;overflow:hidden;border-radius:16px;background:#050505;}
+.combined-pose-panel{position:relative;min-width:0;overflow:hidden;background:#0a0a0a;}
+.combined-pose-panel img{display:block;width:100%;height:100%;object-fit:cover;}
+.combined-pose-panel .ghost{opacity:.25;filter:grayscale(.25);}
+.combined-pose-panel+.combined-pose-panel{border-left:1px solid rgba(255,255,255,.04);}
+.combined-pose-placeholder>small{display:block;margin-top:9px;color:rgba(255,255,255,.42);font-size:10px;line-height:1.5;}
+@media(max-width:700px){.combined-pose-image,.combined-pose-panels{border-radius:14px;}}

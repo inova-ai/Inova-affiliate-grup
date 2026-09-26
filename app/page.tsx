@@ -55,6 +55,7 @@ export default function Home() {
   const [videoReady, setVideoReady] = useState(false);
   const [copied, setCopied] = useState("");
   const [poseGenerating, setPoseGenerating] = useState(false);
+  const [combinedPoseUrl, setCombinedPoseUrl] = useState("");
   const [activeTab, setActiveTab] = useState("studio");
   const [showFaq, setShowFaq] = useState(false);
   const [history, setHistory] = useState<Array<{id:string; type:string; name:string; createdAt:string; status:string; url?:string}>>([]);
@@ -81,6 +82,7 @@ export default function Home() {
     setPhotoUrl(URL.createObjectURL(file));
     setVideoReady(false);
     setResult(null);
+    setCombinedPoseUrl("");
   }
 
   function setReferenceVideo(file: File | undefined) {
@@ -244,6 +246,39 @@ export default function Home() {
     }
   }
 
+  async function combineThreePoseImages(urls: string[]) {
+    if (urls.length !== 3) throw new Error("Tiga hasil pose belum tersedia.");
+    const canvas = document.createElement("canvas");
+    const size = 1200;
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Browser tidak mendukung canvas.");
+
+    const load = (src: string) => new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Gagal menyiapkan foto gabungan."));
+      img.src = src;
+    });
+
+    const images = await Promise.all(urls.map(load));
+    ctx.clearRect(0, 0, size, size);
+    images.forEach((img, index) => {
+      const x = Math.floor(index * size / 3);
+      const nextX = Math.floor((index + 1) * size / 3);
+      const w = nextX - x;
+      // Cover-crop each portrait into its equal vertical panel, like the reference image.
+      const scale = Math.max(w / img.naturalWidth, size / img.naturalHeight);
+      const dw = img.naturalWidth * scale;
+      const dh = img.naturalHeight * scale;
+      const dx = x + (w - dw) / 2;
+      const dy = (size - dh) / 2;
+      ctx.drawImage(img, dx, dy, dw, dh);
+    });
+    return canvas.toDataURL("image/jpeg", 0.94);
+  }
+
   async function generateThreePoses() {
     if (!photo) {
       document.getElementById("photo-input")?.click();
@@ -274,13 +309,22 @@ export default function Home() {
           return { index, error: error instanceof Error ? error.message : "Gagal membuat pose." };
         }
       }));
-      setProgress(90);
+      const ready = results.filter(r => !r.error && r.imageUrl);
+      setProgress(78);
       setPoseResults((prev: PoseResult[]) => prev.map((pose: PoseResult, index: number) => {
         const r = results[index];
         return r.error ? { ...pose, status: "failed", error: r.error } : { ...pose, status: "ready", imageUrl: r.imageUrl };
       }));
-      const ready = results.filter(r => !r.error && r.imageUrl);
-      if (ready.length) saveHistory({ type: "3 Pose", name: productName || photo.name, status: ready.length === 3 ? "READY" : `${ready.length}/3 READY` });
+
+      // The requested output is ONE square image with three equal vertical panels.
+      if (ready.length === 3) {
+        const combined = await combineThreePoseImages(ready.map(r => r.imageUrl as string));
+        setCombinedPoseUrl(combined);
+        saveHistory({ type: "3 Pose • 1 Foto", name: productName || photo.name, status: "READY", url: combined });
+      } else if (ready.length) {
+        setCombinedPoseUrl("");
+        saveHistory({ type: "3 Pose", name: productName || photo.name, status: `${ready.length}/3 READY` });
+      }
       setProgress(100);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Upload produk gagal.";
@@ -441,16 +485,22 @@ export default function Home() {
               <div className="result-panel">
                 {studioMode === "poses" ? (
                   <div className="result-inner">
-                    <div className="result-title"><div><div className="eyebrow">OUTPUT</div><h3>3 Pose</h3></div><span>{poseResults.filter(p => p.status === "ready").length}/3 siap</span></div>
-                    <div className="pose-grid">
-                      {poseResults.map((pose) => (
-                        <div className="pose-card" key={pose.label}>
-                          <div className="pose-media">{pose.imageUrl ? <img src={pose.imageUrl} alt={pose.label} /> : photoUrl ? <img src={photoUrl} alt={pose.label} className="ghost" /> : <span>Preview</span>}{pose.status === "processing" && <div className="processing">GENERATING…</div>}</div>
-                          <div className="pose-name"><b>{pose.label}</b><span>{pose.status === "ready" ? "READY" : pose.status === "failed" ? "ERROR" : pose.status === "processing" ? "RUN" : "WAIT"}</span></div>
-                          {pose.error && <small className="error-text">{pose.error}</small>}
-                          {pose.imageUrl && <a href={pose.imageUrl} download={`inova-${pose.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`} className="download-small"><ArrowDownToLine className="h-3.5 w-3.5" /> Download</a>}
+                    <div className="result-title"><div><div className="eyebrow">OUTPUT</div><h3>3 Pose • 1 Foto</h3></div><span>{poseResults.filter(p => p.status === "ready").length}/3 siap</span></div>
+                    <div className="combined-pose-wrap">
+                      {combinedPoseUrl ? (
+                        <>
+                          <img className="combined-pose-image" src={combinedPoseUrl} alt="3 pose dalam 1 foto" />
+                          <a href={combinedPoseUrl} download="inova-3-pose-1-foto.jpg" className="download-main"><ArrowDownToLine className="h-4 w-4" /> Download 1 Foto</a>
+                        </>
+                      ) : (
+                        <div className="combined-pose-placeholder">
+                          <div className="combined-pose-panels">
+                            {poseResults.map((pose) => <div className="combined-pose-panel" key={pose.label}>{pose.imageUrl ? <img src={pose.imageUrl} alt={pose.label} /> : photoUrl ? <img src={photoUrl} alt="Preview" className="ghost" /> : <span>Preview</span>}{pose.status === "processing" && <div className="processing">GENERATING…</div>}</div>)}
+                          </div>
+                          {poseResults.some(p => p.error) && <small className="error-text">{poseResults.find(p => p.error)?.error}</small>}
+                          {!poseResults.some(p => p.error) && <small>Setelah 3 pose selesai, otomatis digabung menjadi 1 foto seperti contoh.</small>}
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -488,7 +538,7 @@ export default function Home() {
           {showFaq && <section className="faq-card"><div className="eyebrow">PANDUAN</div><h2>Cara kerja</h2>{[
             ["Clothing → Video", "Foto pakaian diproses menjadi gambar model dewasa yang mengenakan pakaian tersebut, lalu dianimasikan menjadi video fashion menggunakan motion preset."],
             ["Foto + Video → Video", "Satu foto + satu video referensi dikirim ke Viggle Video Remix untuk menghasilkan video yang mengikuti gerakan referensi."],
-            ["1 Foto → 3 Pose", "Satu foto diedit menjadi tiga pose. Instruksi diarahkan untuk mempertahankan wajah, rambut, pakaian, warna, motif, aksesori dan proporsi."],
+            ["1 Foto → 3 Pose", "Satu foto diedit menjadi tiga pose lalu otomatis digabung menjadi satu foto square dengan tiga panel vertikal."],
             ["Apakah video referensi wajib?", "Ya untuk workflow Video Motion. Workflow 3 Pose tidak memerlukan video referensi."],
           ].map(([q, a]) => <details key={q}><summary>{q}<ChevronDown className="h-4 w-4" /></summary><p>{a}</p></details>)}</section>}
 
