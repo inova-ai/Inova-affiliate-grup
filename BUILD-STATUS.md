@@ -1,7 +1,7 @@
-# Build Status — V13
+# Build Status — V15
 
-- Removed direct `NEXT_PUBLIC_CLOUDINARY_*` access from the client bundle.
-- Added `/api/config` to provide the Cloudinary unsigned upload settings at runtime.
-- Changed `OPENAI_IMAGE_MODEL` access to dynamic server-side environment lookup so Next.js does not inline its value into build artifacts.
-- Kept Netlify Secrets Scanning enabled.
-- Kept existing AI workflows and API routes intact.
+- Keeps the existing Inova Affiliate Grup workflows intact.
+- Keeps Netlify Secrets Scanning enabled.
+- Configures Netlify to omit only these non-credential configuration values from secret-value scanning: `OPENAI_IMAGE_MODEL`, `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`, and `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`.
+- The actual `OPENAI_API_KEY` and `VIGGLE_API_KEY` remain protected by secret scanning.
+- Removed the temporary `check-env-bundle` build script from the previous iteration.

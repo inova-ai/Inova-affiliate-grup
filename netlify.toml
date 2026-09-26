@@ -4,6 +4,7 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  SECRETS_SCAN_OMIT_KEYS = "OPENAI_IMAGE_MODEL,NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
