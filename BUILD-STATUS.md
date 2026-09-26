@@ -1,8 +1,7 @@
-# Inova Affiliate Grup — V12
+# Build Status — V13
 
-- Preserved all existing workflows.
-- Preserved server-side API key usage.
-- Preserved V11 OpenAI Image Edit diagnostics.
-- Fixed Netlify deployment failure caused by secret scanning of Next.js production webpack cache.
-- Production webpack cache is disabled so secret values are not retained in `.next/cache/webpack` build artifacts.
-- Netlify build clears `.next` and `.netlify` before building to avoid stale cache artifacts.
+- Removed direct `NEXT_PUBLIC_CLOUDINARY_*` access from the client bundle.
+- Added `/api/config` to provide the Cloudinary unsigned upload settings at runtime.
+- Changed `OPENAI_IMAGE_MODEL` access to dynamic server-side environment lookup so Next.js does not inline its value into build artifacts.
+- Kept Netlify Secrets Scanning enabled.
+- Kept existing AI workflows and API routes intact.
