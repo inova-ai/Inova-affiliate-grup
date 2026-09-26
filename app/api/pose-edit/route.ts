@@ -62,7 +62,6 @@ export async function POST(req: Request) {
     form.append("model", process.env.OPENAI_IMAGE_MODEL || "gpt-image-2");
     form.append("image[]", sourceBlob, `source.${extension}`);
     form.append("prompt", prompt);
-    form.append("input_fidelity", "high");
     form.append("n", "1");
     form.append("size", "1024x1536");
     form.append("quality", "medium");
