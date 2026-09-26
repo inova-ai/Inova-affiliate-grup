@@ -2,11 +2,34 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
+function getOpenAIKey() {
+  const raw = process.env.OPENAI_API_KEY || "";
+  return raw.trim().replace(/^['\"]|['\"]$/g, "");
+}
+
+async function verifyOpenAIKey(key: string) {
+  const response = await fetch("https://api.openai.com/v1/models", {
+    method: "GET",
+    headers: { Authorization: `Bearer ${key}` },
+    cache: "no-store",
+  });
+  const data = await response.json().catch(() => ({}));
+  return { ok: response.ok, status: response.status, data };
+}
+
 export async function POST(req: Request) {
   try {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = getOpenAIKey();
     if (!apiKey) {
       return NextResponse.json({ error: "OPENAI_API_KEY belum dikonfigurasi di Netlify." }, { status: 500 });
+    }
+
+    const authCheck = await verifyOpenAIKey(apiKey);
+    if (!authCheck.ok) {
+      return NextResponse.json(
+        { error: authCheck.data?.error?.message || "OpenAI API key tidak valid atau tidak memiliki akses." },
+        { status: authCheck.status }
+      );
     }
 
     const body = await req.json();
@@ -16,6 +39,14 @@ export async function POST(req: Request) {
     if (!imageUrl || !pose) {
       return NextResponse.json({ error: "imageUrl dan pose wajib diisi." }, { status: 400 });
     }
+
+    const sourceResponse = await fetch(imageUrl, { cache: "no-store" });
+    if (!sourceResponse.ok) {
+      return NextResponse.json({ error: `Gagal mengambil foto sumber dari Cloudinary (${sourceResponse.status}).` }, { status: 502 });
+    }
+    const sourceBlob = await sourceResponse.blob();
+    const contentType = sourceResponse.headers.get("content-type") || "image/jpeg";
+    const extension = contentType.includes("png") ? "png" : contentType.includes("webp") ? "webp" : "jpg";
 
     const prompt = [
       "Edit the supplied source fashion/product photo into a new pose while preserving the same person and the same clothing.",
@@ -27,27 +58,25 @@ export async function POST(req: Request) {
       "No collage, no split screen, no extra person, no duplicate limbs, no text, no watermark."
     ].join(" ");
 
+    const form = new FormData();
+    form.append("model", process.env.OPENAI_IMAGE_MODEL || "gpt-image-2");
+    form.append("image[]", sourceBlob, `source.${extension}`);
+    form.append("prompt", prompt);
+    form.append("input_fidelity", "high");
+    form.append("n", "1");
+    form.append("size", "1024x1536");
+    form.append("quality", "medium");
+    form.append("output_format", "png");
+
     const response = await fetch("https://api.openai.com/v1/images/edits", {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: process.env.OPENAI_IMAGE_MODEL || "gpt-image-2",
-        images: [{ image_url: imageUrl }],
-        prompt,
-        input_fidelity: "high",
-        n: 1,
-        size: "1024x1536",
-        quality: "medium",
-        output_format: "png",
-      }),
+      headers: { Authorization: `Bearer ${apiKey}` },
+      body: form,
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const message = data?.error?.message || "OpenAI image edit gagal.";
+      const message = data?.error?.message || `OpenAI image edit gagal (HTTP ${response.status}).`;
       return NextResponse.json({ error: message }, { status: response.status });
     }
 
