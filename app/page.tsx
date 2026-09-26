@@ -90,9 +90,13 @@ export default function Home() {
   }
 
   async function uploadToCloudinary(file: File, resourceType: "image" | "video") {
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const preset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-    if (!cloudName || !preset) throw new Error("Cloudinary belum dikonfigurasi di Netlify (cloud name + unsigned upload preset).");
+    const configResponse = await fetch("/api/config", { cache: "no-store" });
+    const config = await configResponse.json().catch(() => ({}));
+    const cloudName = String(config?.cloudinary?.cloudName || "");
+    const preset = String(config?.cloudinary?.uploadPreset || "");
+    if (!configResponse.ok || !cloudName || !preset) {
+      throw new Error(config?.error || "Cloudinary belum dikonfigurasi di Netlify (cloud name + unsigned upload preset).");
+    }
     const form = new FormData();
     form.append("file", file);
     form.append("upload_preset", preset);
