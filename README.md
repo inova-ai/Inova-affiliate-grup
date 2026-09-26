@@ -19,3 +19,10 @@ After deployment, open:
 `/api/health`
 
 It returns deployment status and boolean checks for Cloudinary, Viggle, and OpenAI environment variables without exposing secret values.
+
+
+## 3 Pose → 1 Foto
+The 3-pose workflow generates three separate pose edits server-side and then combines them in the browser into one square JPEG with three equal vertical panels (standing, 3/4, sitting). The individual generated images are no longer the primary output.
+
+### OpenAI key
+Set `OPENAI_API_KEY` in the deployment environment. Do not include `Bearer`, quotes, or whitespace around the key. If the API returns HTTP 401, the app now shows a specific key/configuration message instead of the generic `Unknown API key`.
