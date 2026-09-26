@@ -288,6 +288,13 @@ export default function Home() {
     setProgress(8);
     setPoseResults((prev: PoseResult[]) => prev.map((p: PoseResult) => ({ ...p, status: "processing", error: undefined, imageUrl: undefined })));
     try {
+      // Preflight the same server environment used by /api/pose-edit.
+      // This prevents a stale/old Netlify function from being mistaken for an API-key problem.
+      const healthResponse = await fetch("/api/health", { cache: "no-store" });
+      const health = await healthResponse.json().catch(() => ({}));
+      if (!healthResponse.ok || !health?.environment?.openaiAuthenticated || !health?.environment?.openaiImageModel) {
+        throw new Error(health?.environment?.openaiError || "OpenAI belum siap di deployment ini. Buka /api/health dan redeploy setelah environment variable diperbarui.");
+      }
       const imageUrl = await uploadToCloudinary(photo, "image");
       setProgress(22);
       const prompts = [
@@ -303,7 +310,17 @@ export default function Home() {
             body: JSON.stringify({ imageUrl, pose: prompt }),
           });
           const data = await response.json();
-          if (!response.ok) throw new Error(data.error || "Gagal membuat pose.");
+          const routeVersion = response.headers.get("x-inova-pose-route");
+          if (!response.ok) {
+            const detail = data.error || "Gagal membuat pose.";
+            if (!routeVersion) {
+              throw new Error(`${detail} — Server pose yang aktif masih versi lama. Redeploy ZIP V18.7 ini di Netlify.`);
+            }
+            throw new Error(detail);
+          }
+          if (routeVersion !== "18.7") {
+            throw new Error("Server pose belum menggunakan versi V18.7. Silakan redeploy ZIP terbaru di Netlify.");
+          }
           return { index, imageUrl: data.imageUrl as string };
         } catch (error) {
           return { index, error: error instanceof Error ? error.message : "Gagal membuat pose." };
