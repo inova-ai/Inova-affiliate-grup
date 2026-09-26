@@ -8,7 +8,7 @@ function getOpenAIKey() {
 }
 
 function getImageModel() {
-  return (process.env.OPENAI_IMAGE_MODEL || "gpt-image-2").trim();
+  return (process.env["OPENAI_IMAGE_MODEL"] || "gpt-image-2").trim();
 }
 
 async function verifyOpenAIKey(key: string) {
