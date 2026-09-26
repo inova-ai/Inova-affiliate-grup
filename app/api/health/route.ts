@@ -12,7 +12,7 @@ export async function GET() {
   let openaiAuthenticated = false;
   let openaiError = "";
   let openaiImageModel = false;
-  const imageModel = (process.env.OPENAI_IMAGE_MODEL || "gpt-image-2").trim();
+  const imageModel = (process.env["OPENAI_IMAGE_MODEL"] || "gpt-image-2").trim();
 
   if (key) {
     try {
@@ -47,8 +47,8 @@ export async function GET() {
 
   return NextResponse.json({
     ok: Boolean(
-      process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME &&
-      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET &&
+      process.env["NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME"] &&
+      process.env["NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET"] &&
       process.env.VIGGLE_API_KEY &&
       key
     ) && openaiAuthenticated,
@@ -56,7 +56,7 @@ export async function GET() {
     status: openaiAuthenticated ? "healthy" : "degraded",
     timestamp: new Date().toISOString(),
     environment: {
-      cloudinary: Boolean(process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET),
+      cloudinary: Boolean(process.env["NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME"] && process.env["NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET"]),
       viggle: Boolean(process.env.VIGGLE_API_KEY),
       openai: Boolean(key),
       openaiAuthenticated,
