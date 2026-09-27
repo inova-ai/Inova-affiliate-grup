@@ -5,7 +5,7 @@ Premium AI affiliate studio built with Next.js.
 ## Workflows
 
 1. **Foto + Video → Video** — photo + reference motion video → Viggle Video Remix.
-2. **1 Foto → 3 Pose** — one photo → three pose variations using OpenAI image editing.
+2. **1 Foto → 3 Pose** — one photo → three pose variations using Hugging Face Inference Providers (OpenAI is not required for 3 Pose).
 3. **Clothing → Video** — clothing photo → AI model wearing the garment → Viggle motion video.
 
 ## Deployment
@@ -30,3 +30,6 @@ Set `OPENAI_API_KEY` in the deployment environment. Do not include `Bearer`, quo
 
 ## V18.7 Pose API Sync Fix
 The pose route is version-stamped (`x-inova-pose-route: 18.7`) and the UI preflights `/api/health` before generating. If the browser still reports the old `Unknown API key` text after deployment, the deployed Netlify function is stale and this ZIP must be redeployed.
+
+### 3 Pose without OpenAI
+Set `HF_TOKEN` in Netlify. The 3 Pose route uses Hugging Face Inference Providers and `black-forest-labs/FLUX.2-dev` by default. Free Hugging Face accounts have limited monthly inference credits; this is not unlimited free usage. `HF_IMAGE_MODEL` can override the model.
