@@ -33,8 +33,6 @@ export async function POST(req: Request) {
     if (!sourceBlob.size) return NextResponse.json({ error: "Foto sumber kosong atau tidak dapat dibaca." }, { status: 422, headers: { "x-inova-pose-route": ROUTE_VERSION } });
 
     const contentType = (sourceResponse.headers.get("content-type") || sourceBlob.type || "image/jpeg").split(";")[0].toLowerCase();
-    const bytes = Buffer.from(await sourceBlob.arrayBuffer());
-    const inputBase64 = bytes.toString("base64");
     const prompt = [
       "Edit the supplied fashion/product photo into the requested new pose.",
       "Preserve the same adult person, exact face, facial features, hairstyle, skin tone, body proportions, clothing items, colors, patterns, logos, fabric and accessories.",
@@ -48,7 +46,7 @@ export async function POST(req: Request) {
     const output = await hf.imageTextToImage({
       model: MODEL,
       provider: "auto",
-      inputs: inputBase64,
+      inputs: sourceBlob,
       parameters: {
         prompt,
         negative_prompt: "duplicate person, extra limbs, deformed hands, distorted face, changed clothing, text, watermark, collage, split screen",
