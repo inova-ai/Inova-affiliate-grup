@@ -13,6 +13,27 @@ export async function GET() {
   let openaiError = "";
   let openaiImageModel = false;
   const imageModel = (process.env["OPENAI_IMAGE_MODEL"] || "gpt-image-2").trim();
+  const viggleKey = (process.env.VIGGLE_API_KEY || "").trim().replace(/^Bearer\s+/i, "").replace(/^['"]|['"]$/g, "");
+  let viggleAuthenticated = false;
+  let viggleError = "";
+
+  if (viggleKey) {
+    try {
+      // A non-existent render ID should return 404 when authentication succeeds.
+      // 401/403 means the API key itself is invalid/unauthorized.
+      const viggleResponse = await fetch("https://apis.viggle.ai/v1/videos/__inova_health_check__", {
+        headers: { Authorization: `Bearer ${viggleKey}` },
+        cache: "no-store",
+      });
+      viggleAuthenticated = viggleResponse.ok || viggleResponse.status === 404;
+      if (!viggleAuthenticated) {
+        const data = await viggleResponse.json().catch(() => ({}));
+        viggleError = data?.message || data?.error || `Viggle authentication failed (HTTP ${viggleResponse.status}).`;
+      }
+    } catch (error) {
+      viggleError = error instanceof Error ? error.message : "Viggle connection failed.";
+    }
+  }
 
   if (key) {
     try {
@@ -49,11 +70,11 @@ export async function GET() {
     ok: Boolean(
       process.env["NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME"] &&
       process.env["NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET"] &&
-      process.env.VIGGLE_API_KEY &&
+      viggleKey &&
       key
-    ) && openaiAuthenticated,
+    ) && openaiAuthenticated && viggleAuthenticated,
     service: "inova-affiliate-grup",
-    status: openaiAuthenticated ? "healthy" : "degraded",
+    status: openaiAuthenticated && viggleAuthenticated ? "healthy" : "degraded",
     timestamp: new Date().toISOString(),
     environment: {
       cloudinary: Boolean(process.env["NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME"] && process.env["NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET"]),
@@ -63,6 +84,7 @@ export async function GET() {
       openaiImageModel,
       imageModel,
       ...(openaiError ? { openaiError } : {}),
+      ...(viggleError ? { viggleError } : {}),
     },
   });
 }
