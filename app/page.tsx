@@ -302,8 +302,8 @@ export default function Home() {
       // This prevents a stale/old Netlify function from being mistaken for an API-key problem.
       const healthResponse = await fetch("/api/health", { cache: "no-store" });
       const health = await healthResponse.json().catch(() => ({}));
-      if (!healthResponse.ok || !health?.environment?.openaiAuthenticated || !health?.environment?.openaiImageModel) {
-        throw new Error(health?.environment?.openaiError || "OpenAI belum siap di deployment ini. Buka /api/health dan redeploy setelah environment variable diperbarui.");
+      if (!healthResponse.ok || !health?.environment?.huggingfaceAuthenticated) {
+        throw new Error(health?.environment?.huggingfaceError || "Hugging Face belum siap di deployment ini. Tambahkan HF_TOKEN di Netlify lalu redeploy.");
       }
       const imageUrl = await uploadToCloudinary(photo, "image");
       setProgress(22);
@@ -324,12 +324,12 @@ export default function Home() {
           if (!response.ok) {
             const detail = data.error || "Gagal membuat pose.";
             if (!routeVersion) {
-              throw new Error(`${detail} — Server pose yang aktif masih versi lama. Redeploy ZIP V18.7 ini di Netlify.`);
+              throw new Error(`${detail} — Server pose yang aktif masih versi lama. Redeploy ZIP ini di Netlify.`);
             }
             throw new Error(detail);
           }
-          if (routeVersion !== "18.7") {
-            throw new Error("Server pose belum menggunakan versi V18.7. Silakan redeploy ZIP terbaru di Netlify.");
+          if (routeVersion !== "19.0-hf") {
+            throw new Error("Server pose belum menggunakan versi Hugging Face terbaru. Silakan redeploy ZIP ini di Netlify.");
           }
           return { index, imageUrl: data.imageUrl as string };
         } catch (error) {
