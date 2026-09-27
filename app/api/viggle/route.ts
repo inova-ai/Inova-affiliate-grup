@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 const BASE_URL = "https://apis.viggle.ai";
 
 export async function POST(request: Request) {
-  const key = process.env.VIGGLE_API_KEY;
+  const key = (process.env.VIGGLE_API_KEY || "").trim().replace(/^Bearer\s+/i, "").replace(/^['"]|['"]$/g, "");
   if (!key) {
     return NextResponse.json({ error: "VIGGLE_API_KEY belum diatur di Netlify." }, { status: 500 });
   }
@@ -28,14 +28,18 @@ export async function POST(request: Request) {
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    return NextResponse.json({ error: data?.message || data?.error || "Viggle API menolak render." }, { status: response.status });
+    const detail = data?.message || data?.error || `HTTP ${response.status}`;
+    const error = response.status === 401 || response.status === 403
+      ? `Viggle API key ditolak (${response.status}). Periksa VIGGLE_API_KEY di Netlify.`
+      : `Viggle gagal (${response.status}): ${detail}`;
+    return NextResponse.json({ error }, { status: response.status });
   }
 
   return NextResponse.json({ ok: true, id: data.id, status: data.status || "processing" });
 }
 
 export async function GET(request: Request) {
-  const key = process.env.VIGGLE_API_KEY;
+  const key = (process.env.VIGGLE_API_KEY || "").trim().replace(/^Bearer\s+/i, "").replace(/^['"]|['"]$/g, "");
   if (!key) return NextResponse.json({ error: "VIGGLE_API_KEY belum diatur di Netlify." }, { status: 500 });
   const id = new URL(request.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Render ID wajib diisi." }, { status: 400 });
@@ -46,7 +50,11 @@ export async function GET(request: Request) {
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    return NextResponse.json({ error: data?.message || data?.error || "Gagal membaca status Viggle." }, { status: response.status });
+    const detail = data?.message || data?.error || `HTTP ${response.status}`;
+    const error = response.status === 401 || response.status === 403
+      ? `Viggle API key ditolak (${response.status}). Periksa VIGGLE_API_KEY di Netlify.`
+      : `Viggle status gagal (${response.status}): ${detail}`;
+    return NextResponse.json({ error }, { status: response.status });
   }
   return NextResponse.json(data);
 }
