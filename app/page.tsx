@@ -114,6 +114,11 @@ export default function Home() {
     setUploading(true);
     setProgress(10);
     try {
+      const healthResponse = await fetch("/api/health", { cache: "no-store" });
+      const health = await healthResponse.json().catch(() => ({}));
+      if (!health?.environment?.viggleAuthenticated) {
+        throw new Error(health?.environment?.viggleError || "Viggle API key belum valid di deployment ini. Periksa VIGGLE_API_KEY di Netlify.");
+      }
       const [imageUrl, motionVideoUrl] = await Promise.all([
         uploadToCloudinary(photo, "image"),
         uploadToCloudinary(reference, "video"),
@@ -165,6 +170,11 @@ export default function Home() {
     setVideoReady(false);
     setProgress(8);
     try {
+      const healthResponse = await fetch("/api/health", { cache: "no-store" });
+      const health = await healthResponse.json().catch(() => ({}));
+      if (!health?.environment?.viggleAuthenticated) {
+        throw new Error(health?.environment?.viggleError || "Viggle API key belum valid di deployment ini. Periksa VIGGLE_API_KEY di Netlify.");
+      }
       const clothingUrl = await uploadToCloudinary(photo, "image");
       setProgress(20);
       const modelRes = await fetch("/api/clothing-model", {
